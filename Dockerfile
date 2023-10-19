@@ -1,15 +1,28 @@
-FROM ubuntu:latest AS build
+# Use a Maven image as the build stage
+FROM maven:4.0.0-openjdk-17-slim AS build
 
-RUN apt-get update
-RUN apt-get install openjdk-17-jdk -y
-COPY . .
+WORKDIR /app
 
-RUN ./gradlew bootJar --no-daemon
+# Copy the project's POM file and download dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline
 
+# Copy the rest of the application source code
+COPY src src
+
+# Build the application
+RUN mvn package
+
+# Use a smaller OpenJDK image as the runtime stage
 FROM openjdk:17-jdk-slim
 
+WORKDIR /app
+
+# Copy the built JAR file from the build stage
+COPY --from=build /app/target/ubidots_dashboard.jar app.jar
+
+# Expose the port your application listens on (if different from 8080)
 EXPOSE 8080
 
-COPY --from=build /build/libs/ubidots_dashboard.jar app.jar
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Define the entry point
+CMD ["java", "-jar", "app.jar"]
