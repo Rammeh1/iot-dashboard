@@ -1,14 +1,4 @@
-# Fetching latest version of Java
-FROM openjdk:17
- 
-# Setting up work directory
-WORKDIR /app
-
-# Copy the jar file into our app
-COPY ./target/ubidots_dashboard-0.0.1-SNAPSHOT.jar /app
-
-# Exposing port 8080
-EXPOSE 8080
-
-# Starting the application
-CMD ["java", "-jar", "ubidots_dashboard-0.0.1-SNAPSHOT.jar"]
+FROM eclipse-temurin:17-jdk-alpine
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
